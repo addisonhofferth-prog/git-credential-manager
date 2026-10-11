@@ -173,6 +173,46 @@ Defaults to enabled.
 
 ---
 
+### GCM_MODAL_PARENTHWND
+
+Specify the parent window handle (`HWND`) for modal dialogs on Windows.
+
+When this variable is unset, GCM tries to parent authentication dialogs to the
+console's visible root-owner window. Hidden or invalid windows are ignored.
+
+Explicitly setting a handle using this variable takes precedence and it is not
+checked for visibility.
+
+> [!NOTE]
+> This is intended for use by application developers who are calling Git and/or
+> GCM from their application and wish to correctly parent authentication dialogs
+> to an existing window.
+>
+> Do **not** set this manually.
+
+#### Example
+
+##### Windows
+
+```csharp
+public static int Example(IntPtr myWindowHandle)
+{
+    using var process = new Process();
+    process.StartInfo = new ProcessStartInfo("git.exe", "pull")
+    {
+        Environment =
+        {
+            ["GCM_MODAL_PARENTHWND"] = myWindowHandle.ToString("d")
+        }
+    };
+    process.Start();
+    process.WaitForExit();
+    return process.ExitCode;
+}
+```
+
+---
+
 ### GCM_PROVIDER
 
 Define the host provider to use when authenticating.
@@ -437,7 +477,7 @@ _(unset)_|Automatically detect modes
 #### Windows
 
 ```batch
-SET GCM_BITBUCKET_AUTHMODES="oauth,basic"
+SET GCM_BITBUCKET_AUTHMODES=oauth,basic
 ```
 
 #### macOS/Linux
@@ -628,7 +668,7 @@ _(unset)_|Automatically detect modes
 #### Windows
 
 ```batch
-SET GCM_GITHUB_AUTHMODES="oauth,basic"
+SET GCM_GITHUB_AUTHMODES=oauth,basic
 ```
 
 #### macOS/Linux
@@ -659,7 +699,7 @@ _(unset)_|Automatically detect modes
 #### Windows
 
 ```batch
-SET GCM_GITLAB_AUTHMODES="browser"
+SET GCM_GITLAB_AUTHMODES=browser
 ```
 
 #### macOS/Linux
@@ -683,7 +723,7 @@ Defaults to the value `git`.
 #### Windows
 
 ```batch
-SET GCM_NAMESPACE="my-namespace"
+SET GCM_NAMESPACE=my-namespace
 ```
 
 #### macOS/Linux
@@ -721,7 +761,7 @@ _(unset)_|Windows: `wincredman`, macOS: `keychain`, Linux: _(none)_|-
 #### Windows
 
 ```batch
-SET GCM_CREDENTIAL_STORE="gpg"
+SET GCM_CREDENTIAL_STORE=gpg
 ```
 
 #### macOS/Linux
@@ -748,7 +788,7 @@ Defaults to empty.
 #### Windows
 
 ```batch
-SET GCM_CREDENTIAL_CACHE_OPTIONS="--timeout 300"
+SET GCM_CREDENTIAL_CACHE_OPTIONS=--timeout 300
 ```
 
 #### macOS/Linux
@@ -843,7 +883,7 @@ Value|Authentication Flow
 #### Windows
 
 ```batch
-SET GCM_MSAUTH_FLOW="devicecode"
+SET GCM_MSAUTH_FLOW=devicecode
 ```
 
 #### macOS/Linux
@@ -856,28 +896,24 @@ export GCM_MSAUTH_FLOW="devicecode"
 
 ---
 
-### GCM_MSAUTH_USEBROKER _(experimental)_
+### GCM_MSAUTH_USEBROKER
 
 Use the operating system account manager where available.
 
-Defaults to `false`. In certain cloud hosted environments when using a work or
-school account, such as [Microsoft DevBox][devbox], the default is `true`.
+Defaults to `true`.
 
-These defaults are subject to change in the future.
-
-_**Note:** before you enable this option on Windows, please
-[review the details][windows-broker] about what this means to your local Windows
-user account._
+_**Note:** for more information about the authentication broker, please review
+the [Microsoft authentication broker][msauth-broker] information._
 
 Value|Description
 -|-
-`true`|Use the operating system account manager as an authentication broker.
-`false` _(default)_|Do not use the broker.
+`true` _(default)_|Use the operating system account manager as an authentication broker.
+`false`|Do not use the broker.
 
 #### Windows
 
 ```batch
-SET GCM_MSAUTH_USEBROKER="true"
+SET GCM_MSAUTH_USEBROKER=false
 ```
 
 #### macOS/Linux
@@ -907,7 +943,7 @@ Value|Description
 #### Windows
 
 ```batch
-SET GCM_MSAUTH_USEDEFAULTACCOUNT="true"
+SET GCM_MSAUTH_USEDEFAULTACCOUNT=true
 ```
 
 #### macOS/Linux
@@ -920,25 +956,81 @@ export GCM_MSAUTH_USEDEFAULTACCOUNT="false"
 
 ---
 
+### GCM_AZREPOS_USE_MSFT_CACHE
+
+Use the token cache shared by Microsoft developer tools when authenticating to
+Azure Repos with Microsoft identity OAuth tokens. This allows GCM to reuse
+authentication performed by tools such as Visual Studio and Azure PowerShell
+CLI, and allows those tools to reuse authentication performed by GCM.
+
+Set this value to `false` to use a GCM-specific token cache instead.
+
+Defaults to `true`.
+
+#### Windows
+
+```batch
+SET GCM_AZREPOS_USE_MSFT_CACHE=false
+```
+
+#### macOS/Linux
+
+```bash
+export GCM_AZREPOS_USE_MSFT_CACHE="false"
+```
+
+**Also see: [credential.azreposUseMicrosoftSharedCache][shared-cache]**
+
+---
+
+### GCM_AZREPOS_USE_LEGACY_CLIENTID
+
+Use the legacy Visual Studio Entra application when authenticating to Azure
+Repos with Microsoft identity OAuth tokens. Set this value to `true` to restore
+the application identity used by earlier versions of GCM.
+
+This is an explicit compatibility option; GCM does not switch to the legacy
+application automatically. For a one-command retry without changing the
+environment, use [credential.azreposUseLegacyClientId][legacy-client-id].
+
+The legacy application does not support broker authentication on macOS or
+Linux.
+
+Defaults to `false`.
+
+#### Windows
+
+```batch
+SET GCM_AZREPOS_USE_LEGACY_CLIENTID=true
+```
+
+#### macOS/Linux
+
+```bash
+export GCM_AZREPOS_USE_LEGACY_CLIENTID="true"
+```
+
+**Also see: [credential.azreposUseLegacyClientId][legacy-client-id]**
+
+---
+
 ### GCM_AZREPOS_CREDENTIALTYPE
 
 Specify the type of credential the Azure Repos host provider should return.
 
-Defaults to the value `pat`. In certain cloud hosted environments when using a
-work or school account, such as [Microsoft DevBox][devbox], the default value is
-`oauth`.
+Defaults to the value `oauth`.
 
 Value|Description
 -|-
 `pat`|Azure DevOps personal access tokens
-`oauth`|Microsoft identity OAuth tokens (AAD or MSA tokens)
+`oauth`|Microsoft identity OAuth tokens (Entra ID or MSA tokens)
 
 More information about Azure Access tokens can be found [here][azure-access-tokens].
 
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_CREDENTIALTYPE="oauth"
+SET GCM_AZREPOS_CREDENTIALTYPE=oauth
 ```
 
 #### macOS/Linux
@@ -978,7 +1070,7 @@ Value|Description
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_MANAGEDIDENTITY="id://11111111-1111-1111-1111-111111111111"
+SET GCM_AZREPOS_MANAGEDIDENTITY=id://11111111-1111-1111-1111-111111111111
 ```
 
 #### macOS/Linux
@@ -1018,7 +1110,7 @@ For more information about workload identity federation, see the
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_WIF="githubactions"
+SET GCM_AZREPOS_WIF=githubactions
 ```
 
 #### macOS/Linux
@@ -1040,7 +1132,7 @@ token for when using [Workload Identity Federation][wif] with
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_WIF_CLIENTID="11111111-1111-1111-1111-111111111111"
+SET GCM_AZREPOS_WIF_CLIENTID=11111111-1111-1111-1111-111111111111
 ```
 
 #### macOS/Linux
@@ -1062,7 +1154,7 @@ token for when using [Workload Identity Federation][wif] with
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_WIF_TENANTID="22222222-2222-2222-2222-222222222222"
+SET GCM_AZREPOS_WIF_TENANTID=22222222-2222-2222-2222-222222222222
 ```
 
 #### macOS/Linux
@@ -1086,7 +1178,7 @@ Defaults to `api://AzureADTokenExchange`.
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_WIF_AUDIENCE="api://AzureADTokenExchange"
+SET GCM_AZREPOS_WIF_AUDIENCE=api://AzureADTokenExchange
 ```
 
 #### macOS/Linux
@@ -1110,7 +1202,7 @@ This setting is required when `GCM_AZREPOS_WIF` is set to `generic`.
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_WIF_ASSERTION="eyJhbGci..."
+SET GCM_AZREPOS_WIF_ASSERTION=eyJhbGci...
 ```
 
 #### macOS/Linux
@@ -1144,7 +1236,7 @@ Value|Description
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_WIF_MANAGEDIDENTITY="system"
+SET GCM_AZREPOS_WIF_MANAGEDIDENTITY=system
 ```
 
 #### macOS/Linux
@@ -1175,7 +1267,7 @@ For more information about service principals, see the Azure DevOps
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_SERVICE_PRINCIPAL="11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222"
+SET GCM_AZREPOS_SERVICE_PRINCIPAL=11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222
 ```
 
 #### macOS/Linux
@@ -1197,7 +1289,7 @@ performing Microsoft authentication for Azure Repos with
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_SP_SECRET="da39a3ee5e6b4b0d3255bfef95601890afd80709"
+SET GCM_AZREPOS_SP_SECRET=da39a3ee5e6b4b0d3255bfef95601890afd80709
 ```
 
 #### macOS/Linux
@@ -1219,7 +1311,7 @@ Specifies the thumbprint of a certificate to use when authenticating as a
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_SP_CERT_THUMBPRINT="9b6555292e4ea21cbc2ebd23e66e2f91ebbe92dc"
+SET GCM_AZREPOS_SP_CERT_THUMBPRINT=9b6555292e4ea21cbc2ebd23e66e2f91ebbe92dc
 ```
 
 #### macOS/Linux
@@ -1245,7 +1337,7 @@ certificate rollover. For details see [https://aka.ms/msal-net-sni](https://aka.
 #### Windows
 
 ```batch
-SET GCM_AZREPOS_SP_CERT_SEND_X5C="true"
+SET GCM_AZREPOS_SP_CERT_SEND_X5C=true
 ```
 
 #### macOS/Linux
@@ -1351,6 +1443,8 @@ Defaults to disabled.
 [credential-authority]: configuration.md#credentialauthority-deprecated
 [credential-autodetecttimeout]: configuration.md#credentialautodetecttimeout
 [credential-azrepos-credential-type]: configuration.md#credentialazreposcredentialtype
+[shared-cache]: configuration.md#credentialazreposusemicrosoftsharedcache
+[legacy-client-id]: configuration.md#credentialazreposuselegacyclientid
 [credential-azrepos-managedidentity]: configuration.md#credentialazreposmanagedidentity
 [credential-azrepos-wif]: configuration.md#credentialazreposworkloadfederation
 [credential-azrepos-wif-clientid]: configuration.md#credentialazreposworkloadfederationclientid
@@ -1405,7 +1499,7 @@ Defaults to disabled.
 [trace2-event-config]: configuration.md#trace2eventTarget
 [trace2-performance-docs]: https://git-scm.com/docs/api-trace2#_the_performance_format_target
 [trace2-performance-config]: configuration.md#trace2perfTarget
-[windows-broker]: windows-broker.md
+[msauth-broker]: msauth-broker.md
 [service-principal]: https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals
 [azrepos-sp-mid]: https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity
 [azrepos-wif-doc]: azrepos-wif.md

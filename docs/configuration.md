@@ -699,28 +699,24 @@ git config --global credential.msauthFlow devicecode
 
 ---
 
-### credential.msauthUseBroker _(experimental)_
+### credential.msauthUseBroker
 
 Use the operating system account manager where available.
 
-Defaults to `false`. In certain cloud hosted environments when using a work or
-school account, such as [Microsoft DevBox][devbox], the default is `true`.
+Defaults to `true`.
 
-These defaults are subject to change in the future.
-
-_**Note:** before you enable this option on Windows, please review the
-[Windows Broker][wam] details for what this means to your local Windows user
-account._
+_**Note:** for more information about the authentication broker, please review
+the [Microsoft authentication broker][msauth-broker] information._
 
 Value|Description
 -|-
-`true`|Use the operating system account manager as an authentication broker.
-`false` _(default)_|Do not use the broker.
+`true` _(default)_|Use the operating system account manager as an authentication broker.
+`false`|Do not use the broker.
 
 #### Example
 
 ```shell
-git config --global credential.msauthUseBroker true
+git config --global credential.msauthUseBroker false
 ```
 
 **Also see: [GCM_MSAUTH_USEBROKER][gcm-msauth-usebroker]**
@@ -827,18 +823,65 @@ Credential: "git:https://bob@github.com/example/myrepo" (user = bob)
 
 ---
 
+### credential.azreposUseMicrosoftSharedCache
+
+Use the token cache shared by Microsoft developer tools when authenticating to
+Azure Repos with Microsoft identity OAuth tokens. This allows GCM to reuse
+authentication performed by tools such as Visual Studio and Azure PowerShell
+CLI, and allows those tools to reuse authentication performed by GCM.
+
+Set this value to `false` to use a GCM-specific token cache instead.
+
+Defaults to `true`.
+
+#### Example
+
+```shell
+git config --global credential.azreposUseMicrosoftSharedCache false
+```
+
+**Also see: [GCM_AZREPOS_USE_MSFT_CACHE][gcm-azrepos-shared-cache]**
+
+---
+
+### credential.azreposUseLegacyClientId
+
+Use the legacy Visual Studio Entra application when authenticating to Azure
+Repos with Microsoft identity OAuth tokens. Set this value to `true` to restore
+the application identity used by earlier versions of GCM.
+
+For recognized client application configuration failures, GCM suggests this
+option but does not retry authentication automatically. Use it as a temporary
+compatibility workaround. If retrying with the legacy application succeeds,
+please [report the original failure](https://aka.ms/gcm/bug).
+
+The legacy application does not support broker authentication on macOS or
+Linux.
+
+Defaults to `false`.
+
+#### Example
+
+Retry one Git command without persisting the setting:
+
+```shell
+git -c credential.azreposUseLegacyClientId=true fetch
+```
+
+**Also see: [GCM_AZREPOS_USE_LEGACY_CLIENTID][gcm-azrepos-legacy-client-id]**
+
+---
+
 ### credential.azreposCredentialType
 
 Specify the type of credential the Azure Repos host provider should return.
 
-Defaults to the value `pat`. In certain cloud hosted environments when using a
-work or school account, such as [Microsoft DevBox][devbox], the default value is
-`oauth`.
+Defaults to the value `oauth`.
 
 Value|Description
 -|-
 `pat`|Azure DevOps personal access tokens
-`oauth`|Microsoft identity OAuth tokens (AAD or MSA tokens)
+`oauth`|Microsoft identity OAuth tokens (Entra ID or MSA tokens)
 
 Here is more information about [Azure Access tokens][azure-tokens].
 
@@ -1179,6 +1222,8 @@ Defaults to disabled.
 [gcm-authority]: environment.md#GCM_AUTHORITY-deprecated
 [gcm-autodetect-timeout]: environment.md#GCM_AUTODETECT_TIMEOUT
 [gcm-azrepos-credentialtype]: environment.md#GCM_AZREPOS_CREDENTIALTYPE
+[gcm-azrepos-shared-cache]: environment.md#GCM_AZREPOS_USE_MSFT_CACHE
+[gcm-azrepos-legacy-client-id]: environment.md#GCM_AZREPOS_USE_LEGACY_CLIENTID
 [gcm-azrepos-credentialmanagedidentity]: environment.md#GCM_AZREPOS_MANAGEDIDENTITY
 [gcm-azrepos-wif]: environment.md#GCM_AZREPOS_WIF
 [gcm-azrepos-wif-clientid]: environment.md#GCM_AZREPOS_WIF_CLIENTID
@@ -1226,7 +1271,7 @@ Defaults to disabled.
 [trace2-event-env]: environment.md#GIT_TRACE2_EVENT
 [trace2-performance-docs]: https://git-scm.com/docs/api-trace2#_the_performance_format_target
 [trace2-performance-env]: environment.md#GIT_TRACE2_PERF
-[wam]: windows-broker.md
+[msauth-broker]: msauth-broker.md
 [service-principal]: https://docs.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals
 [azrepos-sp-mid]: https://learn.microsoft.com/en-us/azure/devops/integrate/get-started/authentication/service-principal-managed-identity
 [azrepos-wif-doc]: azrepos-wif.md

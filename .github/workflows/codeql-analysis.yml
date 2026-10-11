@@ -2,10 +2,10 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ main, release ]
+    branches: [ main, release, vnext ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ main ]
+    branches: [ main, vnext ]
 
 jobs:
   analyze:
@@ -22,7 +22,7 @@ jobs:
         language: [ 'csharp' ]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5.2.0
